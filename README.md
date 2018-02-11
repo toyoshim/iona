@@ -1,10 +1,10 @@
-# IONA - JVS IO Board for Arduino Nano
+# IONA - JVS IO Board by Arduino Nano
 
 This program makes an Arduino Nano work as a JVS IO Board that allows you
 to connect a legacy JAMMA joystick to a JVS based arcade system, such as NAOMI.
 
 ## Schematic
-
+```
                          o TX1  VIN o--------------------------o (JAMMA c)
 JVS Data+ o--------------o RX0  GND o
                          o RST  RST o
@@ -31,13 +31,13 @@ JVS Sense o---o---VVVV---o D3    A6 o-o---o---VVVV-------o o---o 5V
  JAMMA 24 o--------------o D10 AREF o--------------------------o 5V
  JAMMA 25 o--------------o D11  3V3 o
  JAMMA 15 o--------------o D12  D13 o--------------------------o LED on Nano
-
+```
 Of course, all GNDs should be connected together.
-
+```
  JVC GND o---o---o JAMMA GND
              |
       Arduino Nano  GND
-
+```
 VIN from JAMMA 5V is optinoal. Instead, you can provide power to the Arduino
 Nano from the USB mini on the board as usually you do to program it.
 
