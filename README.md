@@ -46,3 +46,6 @@ rapid fire switches, and mode select to support the Marjong connector.
 
 Button 5 and 6 can be connected to an extended connector that support extra
 buttons, like aka kick harness.
+
+Note: JVS uses the USB connector, but it isn't the real USB at all.
+The protocol is completely different, and it does not provide the 5V power.
