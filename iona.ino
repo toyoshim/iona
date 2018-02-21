@@ -50,7 +50,7 @@ void loop() {
 
     // Update coin
     uint8_t newCoin = digitalRead(A3);
-    if (!coin && newCoin)
+    if (coin && !newCoin)
       coinCount++;
     coin = newCoin;
     return;
@@ -61,6 +61,9 @@ void loop() {
     for (int i = 0; io_id[i]; ++i)
       io.pushReport(io_id[i]);
     io.pushReport(0);
+
+    // Initialize.
+    coinCount = 0;
     break;
    case JVSIO::kCmdFunctionCheck:
     io.pushReport(JVSIO::kReportOk);
@@ -96,7 +99,7 @@ void loop() {
     }
     break;
    case JVSIO::kCmdCoinSub:
-    coin -= data[3];
+    coinCount -= data[3];
     io.pushReport(JVSIO::kReportOk);
     break;
   }
