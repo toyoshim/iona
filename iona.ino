@@ -6,25 +6,65 @@
 
 JVSIO io;
 
-static const char io_id[] = "TOYOSHIMA-HOUSE;IONA-AN;ver0.9;experiments";
-uint8_t ios[3] = { 0x00, 0x00, 0x00 };
+static const char io_id[] = "TOYOSHIMA-HOUSE;IONA-AN;ver0.92;experiments";
+static const char suchipai_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-AN;Ver0.92;Su Chi Pai mode";
+uint8_t ios[5] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
 uint8_t coinCount = 0;
 uint8_t mode = 0;
 uint8_t coin = 0;
+uint8_t gpout = 0;
+
+bool suchipai_mode = false;
 
 int in(int pin, int shift) {
   return (digitalRead(pin) ? 0 : 1) << shift;
 }
 
-uint8_t readMode() {
+void updateMode() {
   int value = analogRead(A7);
   if (value < 170)
-    return 0;
-  if (value < 420)
-    return 1;
-  if (value < 570)
-    return 2;
-  return 3;
+    mode = 0;
+  else if (value < 420)
+    mode = 1;
+  else if (value < 570)
+    mode = 2;
+  else
+    mode = 3;
+
+  suchipai_mode = mode == 2;
+}
+
+uint8_t suchipaiReport() {
+  // OUT  |  B7 |  B6 |  B5 |  B4 |  B3 |  B2 |  B1 |  B0 |
+  // -----+-----+-----+-----+-----+-----+-----+-----+-----+
+  // 0x40 |  A  |  -  |  E  |  I  |  M  | KAN |  -  |  -  |
+  // 0x20 |  B  |  -  |  F  |  J  |  N  |REACH|START|  -  |
+  // 0x10 |  C  |  -  |  G  |  K  | CHI | RON |  -  |  -  |
+  // 0x80 |  D  |  -  |  H  |  L  | PON |  -  |  -  |  -  |
+
+  // Emulated by D-pad + 4 buttons.
+  uint8_t start = (ios[1] & 0x80) ? 2 : 0;
+  if ((gpout == 0x40 && !(ios[1] & 0x02)) ||
+      (gpout == 0x20 && !(ios[1] & 0x01)) ||
+      (gpout == 0x10 && !(ios[2] & 0x80)) ||
+      (gpout == 0x80 && !(ios[2] & 0x40))) {
+    return start;
+  }
+  switch (ios[1] & 0x2c) {
+   case 0x00:
+    return 0x00 | start;
+   case 0x04:
+    return 0x04 | start;
+   case 0x08:
+    return 0x80 | start;
+   case 0x20:
+    return 0x10 | start;
+   case 0x24:
+    return 0x08 | start;
+   case 0x28:
+    return 0x20 | start;
+  }
+  return start;
 }
 
 void setup() {
@@ -39,7 +79,8 @@ void loop() {
   uint8_t len;
   uint8_t* data = io.getNextCommand(&len);
   if (!data) {
-    mode = readMode();
+    updateMode();
+
     // Update IO pins.
     // Common SW: TEST TILT1 TILT2 TILT3 UND UND UND UND
     ios[0] = in(12, 7);
@@ -58,8 +99,11 @@ void loop() {
   switch (*data) {
    case JVSIO::kCmdIoId:
     io.pushReport(JVSIO::kReportOk);
-    for (int i = 0; io_id[i]; ++i)
-      io.pushReport(io_id[i]);
+    {
+      const char* id = suchipai_mode ? suchipai_id : io_id;
+      for (size_t i = 0; id[i]; ++i)
+        io.pushReport(id[i]);
+    }
     io.pushReport(0);
 
     // Initialize.
@@ -73,22 +117,27 @@ void loop() {
     io.pushReport(0x0C);  // buttons
     io.pushReport(0x00);
 
+    io.pushReport(0x12);  // general purpose driver
+    io.pushReport(0x08);  // slots
+    io.pushReport(0x00);
+    io.pushReport(0x00);
+
     io.pushReport(0x02);  // coin
-    io.pushReport(0x01);  // slot
+    io.pushReport(0x01);  // slots
     io.pushReport(0x00);
     io.pushReport(0x00);
 
     io.pushReport(0x00);
     break;
    case JVSIO::kCmdSwInput:
-    if (data[1] != 1 || data[2] != 2) {
-     io.pushReport(JVSIO::kReportParamErrorNoResponse);
-     Serial.println("sw error");
-    } else {
-      io.pushReport(JVSIO::kReportOk);
-      io.pushReport(ios[0]);
-      io.pushReport(ios[1]);
-      io.pushReport(ios[2]);
+    io.pushReport(JVSIO::kReportOk);
+    for (size_t player = 0; player < data[1]; ++player) {
+      for (size_t line = 0; line <= data[2]; ++line) {
+        if (suchipai_mode)
+          io.pushReport(line ? suchipaiReport() : ios[0]);
+        else
+          io.pushReport(line < sizeof(ios) ? ios[line] : 0x00);
+      }
     }
     break;
    case JVSIO::kCmdCoinInput:
@@ -100,6 +149,10 @@ void loop() {
     break;
    case JVSIO::kCmdCoinSub:
     coinCount -= data[3];
+    io.pushReport(JVSIO::kReportOk);
+    break;
+   case JVSIO::kCmdDriverOutput:
+    gpout = data[2];
     io.pushReport(JVSIO::kReportOk);
     break;
   }
