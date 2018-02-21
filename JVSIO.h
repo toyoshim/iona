@@ -40,6 +40,7 @@ class JVSIO {
     kCmdRetry = 0x2F,           // mandatory
 
     kCmdCoinSub = 0x30,
+    kCmdDriverOutput = 0x32,
 
     kReportOk = 0x01,
     kReportParamErrorNoResponse = 0x02,
