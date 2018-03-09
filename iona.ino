@@ -6,8 +6,10 @@
 
 JVSIO io;
 
-static const char io_id[] = "TOYOSHIMA-HOUSE;IONA-AN;ver0.92;experiments";
-static const char suchipai_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-AN;Ver0.92;Su Chi Pai mode";
+// Some NAOMI games expects the first segment starts with "SEGA ENTERPRISES,LTD.".
+// E.g. one major official I/O board is "SEGA ENTERPRISES,LTD.;I/O 838-13683B;Ver1.07;99/16".
+static const char io_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;ver0.93;Normal Mode";
+static const char suchipai_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver0.93;Su Chi Pai Mode";
 uint8_t ios[5] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
 uint8_t coinCount = 0;
 uint8_t mode = 0;
@@ -113,8 +115,13 @@ void loop() {
     io.pushReport(JVSIO::kReportOk);
 
     io.pushReport(0x01);  // sw
-    io.pushReport(0x01);  // player
+    io.pushReport(0x02);  // players
     io.pushReport(0x0C);  // buttons
+    io.pushReport(0x00);
+
+    io.pushReport(0x03);  // analog inputs
+    io.pushReport(0x08);  // channels
+    io.pushReport(0x00);  // bits
     io.pushReport(0x00);
 
     io.pushReport(0x12);  // general purpose driver
@@ -123,7 +130,7 @@ void loop() {
     io.pushReport(0x00);
 
     io.pushReport(0x02);  // coin
-    io.pushReport(0x01);  // slots
+    io.pushReport(0x02);  // slots
     io.pushReport(0x00);
     io.pushReport(0x00);
 
@@ -131,10 +138,13 @@ void loop() {
     break;
    case JVSIO::kCmdSwInput:
     io.pushReport(JVSIO::kReportOk);
+    io.pushReport(ios[0]);
     for (size_t player = 0; player < data[1]; ++player) {
-      for (size_t line = 0; line <= data[2]; ++line) {
-        if (suchipai_mode)
-          io.pushReport(line ? suchipaiReport() : ios[0]);
+      for (size_t line = 1; line <= data[2]; ++line) {
+        if (player)
+          io.pushReport(0x00);
+        else if (suchipai_mode)
+          io.pushReport(suchipaiReport());
         else
           io.pushReport(line < sizeof(ios) ? ios[line] : 0x00);
       }
@@ -144,11 +154,19 @@ void loop() {
     io.pushReport(JVSIO::kReportOk);
     for (size_t slot = 0; slot < data[1]; ++slot) {
       io.pushReport((0 << 6) | 0);
-      io.pushReport(coinCount);
+      io.pushReport(slot ? 0x00 : coinCount);
+    }
+    break;
+   case JVSIO::kCmdAnalogInput:
+    io.pushReport(JVSIO::kReportOk);
+    for (size_t channel = 0; channel < data[1]; ++channel) {
+      io.pushReport(0x80);
+      io.pushReport(0x00);
     }
     break;
    case JVSIO::kCmdCoinSub:
-    coinCount -= data[3];
+    if (!data[1])
+      coinCount -= data[3];
     io.pushReport(JVSIO::kReportOk);
     break;
    case JVSIO::kCmdDriverOutput:
