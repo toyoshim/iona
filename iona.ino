@@ -8,8 +8,9 @@ JVSIO io;
 
 // Some NAOMI games expects the first segment starts with "SEGA ENTERPRISES,LTD.".
 // E.g. one major official I/O board is "SEGA ENTERPRISES,LTD.;I/O 838-13683B;Ver1.07;99/16".
-static const char io_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;ver0.93;Normal Mode";
-static const char suchipai_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver0.93;Su Chi Pai Mode";
+static const char io_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;ver0.94;Normal Mode";
+static const char suchipai_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver0.94;Su Chi Pai Mode";
+static const char virtualon_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver0.94;Virtual-On Mode";
 uint8_t ios[5] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
 uint8_t coinCount = 0;
 uint8_t mode = 0;
@@ -17,6 +18,7 @@ uint8_t coin = 0;
 uint8_t gpout = 0;
 
 bool suchipai_mode = false;
+bool virtualon_mode = false;
 
 int in(int pin, int shift) {
   return (digitalRead(pin) ? 0 : 1) << shift;
@@ -24,16 +26,17 @@ int in(int pin, int shift) {
 
 void updateMode() {
   int value = analogRead(A7);
-  if (value < 170)
+  if (value < 170)       // SW1-OFF, SW2-OFF
     mode = 0;
-  else if (value < 420)
+  else if (value < 420)  // SW1-OFF, SW2-ON
     mode = 1;
-  else if (value < 570)
+  else if (value < 570)  // SW1-ON , SW2-OFF
     mode = 2;
   else
     mode = 3;
 
   suchipai_mode = mode == 2;
+  virtualon_mode = mode == 1;
 }
 
 uint8_t suchipaiReport() {
@@ -69,6 +72,52 @@ uint8_t suchipaiReport() {
   return start;
 }
 
+uint8_t virtualonReport(size_t player, size_t line) {
+  //       |  B7 |  B6 |  B5 |  B4 |  B3 |  B2 |  B1 |  B0 |
+  // ------+-----+-----+-----+-----+-----+-----+-----+-----+
+  // P0-L1 |Start|  -  | L U | L D | L L | L R |L sht|L trb|
+  // P0-L2 | QM  |  -  |  -  |  -  |  -  |  -  |  -  |  -  |
+  // P1-L1 |  -  |  -  | R U | R D | R L | R R |R sht|R trb|
+  // P1-L2 |  -  |  -  |  -  |  -  |  -  |  -  |  -  |  -  |
+
+  // Try fullfilling 2 stick controlls avobe via usual single
+  // arcade controller that has only 1 stick and 4 buttons.
+  // Button 1 - L shot
+  // Button 2 - turn or jump w/ stick
+  // Button 3 - LR turbo
+  // Button 4 - R shot
+  if (player >= 2 || line != 1)
+    return 0x00;
+  uint8_t data = 0x00;
+  bool rotate = ios[1] & 1;
+  if (rotate) {
+    bool up = ios[1] & 32;
+    bool down = ios[1] & 16;
+    bool left = ios[1] & 8;
+    bool right = ios[1] & 4;
+    if (player == 0) { // Left Stick
+      if (left) data |= 32;
+      if (right) data |= 16;
+      if (up) data |= 8;
+      if (down) data |= 4;
+    } else {  // Right Stick
+      if (left) data |= 16;
+      if (right) data |= 32;
+      if (up) data |= 4;
+      if (down) data |= 8;
+    }
+  } else {
+    data = ios[1] & ~3;
+  }
+  if (player == 0 && ios[1] & 2)
+    data |= 2;
+  if (player == 1 && ios[2] & 64)
+    data |= 2;
+  if (ios[2] & 128)
+    data |= 1;
+  return data;
+}
+
 void setup() {
   io.begin();
 
@@ -102,7 +151,7 @@ void loop() {
    case JVSIO::kCmdIoId:
     io.pushReport(JVSIO::kReportOk);
     {
-      const char* id = suchipai_mode ? suchipai_id : io_id;
+      const char* id = virtualon_mode ? virtualon_id : suchipai_mode ? suchipai_id : io_id;
       for (size_t i = 0; id[i]; ++i)
         io.pushReport(id[i]);
     }
@@ -141,7 +190,9 @@ void loop() {
     io.pushReport(ios[0]);
     for (size_t player = 0; player < data[1]; ++player) {
       for (size_t line = 1; line <= data[2]; ++line) {
-        if (player)
+        if (virtualon_mode)
+          io.pushReport(virtualonReport(player, line));
+        else if (player)
           io.pushReport(0x00);
         else if (suchipai_mode)
           io.pushReport(suchipaiReport());
