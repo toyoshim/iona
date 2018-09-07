@@ -1,0 +1,3 @@
+[submodule "jvsio"]
+	path = jvsio
+	url = git@github.com:toyoshim/jvsio.git
