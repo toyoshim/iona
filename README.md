@@ -5,10 +5,10 @@ to connect a legacy JAMMA joystick to a JVS based arcade system, such as NAOMI.
 
 ## Schematic
 ```
-                         o TX1  VIN o--------------------------o (JAMMA c)
+                         o TX1  VIN o
 JVS Data+ o--------------o RX0  GND o
                          o RST  RST o
-                         o GND   5V o--------------------------o AREF
+                         o GND   5V o--------------------------o (JAMMA c)
                                                          / DIPSW1
 JVS Data- o--------------o D2    A7 o-o---o---VVVV-------o o---o 5V
                                       |   |   R Ohm
