@@ -2,9 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "jvsio/NanoClient.cpp"
 #include "jvsio/JVSIO.cpp"
 
-JVSIO io;
+NanoSenseClient sense;
+NanoLedClient led;
+JVSIO io(sense, led);
 
 // Some NAOMI games expects the first segment starts with "SEGA ENTERPRISES,LTD.".
 // E.g. one major official I/O board is "SEGA ENTERPRISES,LTD.;I/O 838-13683B;Ver1.07;99/16".
