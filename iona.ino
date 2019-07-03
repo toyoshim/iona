@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "jvsio/NanoClient.cpp"
+#include "jvsio/clients/NanoClient.cpp"
 #include "jvsio/JVSIO.cpp"
 
 NanoDataClient data;
