@@ -5,147 +5,149 @@
 #include "jvsio/clients/NanoClient.cpp"
 #include "jvsio/JVSIO.cpp"
 
+class SnesController {
+ public:
+  enum Player : int {
+    P1 = 0,
+    P2 = 1,
+  };
+  enum Button : int {
+    B = 0,
+    Y = 1,
+    Select = 2,
+    Start = 3,
+    Up = 4,
+    Down = 5,
+    Left = 6,
+    Right = 7,
+    A = 8,
+    X = 9,
+    L = 10,
+    R = 11,
+  };
+  SnesController(int clock1, int latch1, int serial1, int clock2, int latch2, int serial2)
+  : clock1_(clock1), latch1_(latch1), serial1_(serial1)
+  , clock2_(clock2), latch2_(latch2), serial2_(serial2) {}
+
+  void begin() {
+    pinMode(clock1_, OUTPUT);
+    digitalWrite(clock1_, HIGH);
+    pinMode(clock2_, OUTPUT);
+    digitalWrite(clock2_, HIGH);
+
+    pinMode(latch1_, OUTPUT);
+    digitalWrite(latch1_, LOW);
+    pinMode(latch2_, OUTPUT);
+    digitalWrite(latch2_, LOW);
+
+    pinMode(serial1_, INPUT_PULLUP);
+    pinMode(serial2_, INPUT_PULLUP);
+  }
+
+  void update() {
+    digitalWrite(latch1_, HIGH);
+    digitalWrite(latch2_, HIGH);
+    delayMicroseconds(12);
+    digitalWrite(latch1_, LOW);
+    digitalWrite(latch2_, LOW);
+    delayMicroseconds(6);
+
+    for (int i = 0; i < 16; ++i) {
+      digitalWrite(clock1_, LOW);
+      digitalWrite(clock2_, LOW);
+      delayMicroseconds(6);
+      if (i <= 11) {
+        buttons[0][i] = digitalRead(serial1_);
+        buttons[1][i] = digitalRead(serial2_);
+      }
+      digitalWrite(clock1_, HIGH);
+      digitalWrite(clock2_, HIGH);
+      delayMicroseconds(6);
+    }
+  }
+
+  int button(int player, int button) {
+    return (buttons[player][button] == LOW) ? 0 : 1;
+  }
+
+ private:
+  const int clock1_;
+  const int clock2_;
+  const int latch1_;
+  const int latch2_;
+  const int serial1_;
+  const int serial2_;
+  int buttons[2][12];
+};
+
 NanoDataClient data;
 NanoSenseClient sense;
 NanoLedClient led;
 JVSIO io(&data, &sense, &led);
 
-// Some NAOMI games expects the first segment starts with "SEGA ENTERPRISES,LTD.".
-// E.g. one major official I/O board is "SEGA ENTERPRISES,LTD.;I/O 838-13683B;Ver1.07;99/16".
-static const char io_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;ver0.94;Normal Mode";
-static const char suchipai_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver0.94;Su Chi Pai Mode";
-static const char virtualon_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver0.94;Virtual-On Mode";
+// Note: You can pass other available GPIO pins if you want.
+// A0: SNES P1 Clock
+// A1: SNES P1 Latch
+// A2: SNES P1 Serial
+// A3: SNES P2 Clock
+// A4: SNES P2 Latch
+// A5: SNES P2 Serial
+SnesController snesc(A0, A1, A2, A3, A4, A5);
+
+static const char io_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;ver0.94;Experimental SNES Support";
 uint8_t ios[5] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
 uint8_t coinCount = 0;
-uint8_t mode = 0;
 uint8_t coin = 0;
 uint8_t gpout = 0;
 
-bool suchipai_mode = false;
-bool virtualon_mode = false;
-
-int in(int pin, int shift) {
-  return (digitalRead(pin) ? 0 : 1) << shift;
-}
-
-void updateMode() {
-  int value = analogRead(A7);
-  if (value < 170)       // SW1-OFF, SW2-OFF
-    mode = 0;
-  else if (value < 420)  // SW1-OFF, SW2-ON
-    mode = 1;
-  else if (value < 570)  // SW1-ON , SW2-OFF
-    mode = 2;
-  else
-    mode = 3;
-
-  suchipai_mode = mode == 2;
-  virtualon_mode = mode == 1;
-}
-
-uint8_t suchipaiReport() {
-  // OUT  |  B7 |  B6 |  B5 |  B4 |  B3 |  B2 |  B1 |  B0 |
-  // -----+-----+-----+-----+-----+-----+-----+-----+-----+
-  // 0x40 |  A  |  -  |  E  |  I  |  M  | KAN |  -  |  -  |
-  // 0x20 |  B  |  -  |  F  |  J  |  N  |REACH|START|  -  |
-  // 0x10 |  C  |  -  |  G  |  K  | CHI | RON |  -  |  -  |
-  // 0x80 |  D  |  -  |  H  |  L  | PON |  -  |  -  |  -  |
-
-  // Emulated by D-pad + 4 buttons.
-  uint8_t start = (ios[1] & 0x80) ? 2 : 0;
-  if ((gpout == 0x40 && !(ios[1] & 0x02)) ||
-      (gpout == 0x20 && !(ios[1] & 0x01)) ||
-      (gpout == 0x10 && !(ios[2] & 0x80)) ||
-      (gpout == 0x80 && !(ios[2] & 0x40))) {
-    return start;
-  }
-  switch (ios[1] & 0x2c) {
-   case 0x00:
-    return 0x00 | start;
-   case 0x04:
-    return 0x04 | start;
-   case 0x08:
-    return 0x80 | start;
-   case 0x20:
-    return 0x10 | start;
-   case 0x24:
-    return 0x08 | start;
-   case 0x28:
-    return 0x20 | start;
-  }
-  return start;
-}
-
-uint8_t virtualonReport(size_t player, size_t line) {
-  //       |  B7 |  B6 |  B5 |  B4 |  B3 |  B2 |  B1 |  B0 |
-  // ------+-----+-----+-----+-----+-----+-----+-----+-----+
-  // P0-L1 |Start|  -  | L U | L D | L L | L R |L sht|L trb|
-  // P0-L2 | QM  |  -  |  -  |  -  |  -  |  -  |  -  |  -  |
-  // P1-L1 |  -  |  -  | R U | R D | R L | R R |R sht|R trb|
-  // P1-L2 |  -  |  -  |  -  |  -  |  -  |  -  |  -  |  -  |
-
-  // Try fullfilling 2 stick controlls avobe via usual single
-  // arcade controller that has only 1 stick and 4 buttons.
-  // Button 1 - L shot
-  // Button 2 - turn or jump w/ stick
-  // Button 3 - LR turbo
-  // Button 4 - R shot
-  if (player >= 2 || line != 1)
-    return 0x00;
-  uint8_t data = 0x00;
-  bool rotate = ios[1] & 1;
-  if (rotate) {
-    bool up = ios[1] & 32;
-    bool down = ios[1] & 16;
-    bool left = ios[1] & 8;
-    bool right = ios[1] & 4;
-    if (player == 0) { // Left Stick
-      if (left) data |= 32;
-      if (right) data |= 16;
-      if (up) data |= 8;
-      if (down) data |= 4;
-    } else {  // Right Stick
-      if (left) data |= 16;
-      if (right) data |= 32;
-      if (up) data |= 4;
-      if (down) data |= 8;
-    }
-  } else {
-    data = ios[1] & ~3;
-  }
-  if (player == 0 && ios[1] & 2)
-    data |= 2;
-  if (player == 1 && ios[2] & 64)
-    data |= 2;
-  if (ios[2] & 128)
-    data |= 1;
-  return data;
-}
-
 void setup() {
   io.begin();
-
-  int pins[] = { 4, 5, 6, 7, 8, 9, 10, 11, 12, A0, A1, A2, A3, A4, A5 };
-  for (int i = 0; i < sizeof(pins); ++i)
-    pinMode(pins[i], INPUT_PULLUP);
+  snesc.begin();
 }
 
 void loop() {
   uint8_t len;
   uint8_t* data = io.getNextCommand(&len);
   if (!data) {
-    updateMode();
+    snesc.update();
 
-    // Update IO pins.
+    // Note: You can map controllers' inputs as you want.
+    // See https://github.com/toyoshim/iona/wiki/SW-Standard for details.
     // Common SW: TEST TILT1 TILT2 TILT3 UND UND UND UND
-    ios[0] = in(12, 7);
+    ios[0] = 0;
     // START SERVICE UP DOWN LEFT RIGHT PUSH1 PISH2
-    ios[1] = in(A2, 7) | in(4, 5) | in(5, 4) | in(6, 3) | in(7, 2) | in(8, 1) | in(9, 0);
+    ios[1] =
+        (snesc.button(SnesController::P1, SnesController::Start) << 7) |
+        (snesc.button(SnesController::P1, SnesController::Up   ) << 5) |
+        (snesc.button(SnesController::P1, SnesController::Down ) << 4) |
+        (snesc.button(SnesController::P1, SnesController::Left ) << 3) |
+        (snesc.button(SnesController::P1, SnesController::Right) << 2) |
+        (snesc.button(SnesController::P1, SnesController::A    ) << 1) |
+        (snesc.button(SnesController::P1, SnesController::B    ) << 0);
       // PUSH3 PUSH4 PUSH5 PUSH6 (PUSH7) (PUSH8) UND UND
-    ios[2] = in(10, 7) | in(11, 6) | in(A1, 5) | in(A0, 4);
+    ios[2] =
+        (snesc.button(SnesController::P1, SnesController::X    ) << 7) |
+        (snesc.button(SnesController::P1, SnesController::Y    ) << 6) |
+        (snesc.button(SnesController::P1, SnesController::L    ) << 5) |
+        (snesc.button(SnesController::P1, SnesController::R    ) << 4);
+    // START SERVICE UP DOWN LEFT RIGHT PUSH1 PISH2
+    ios[3] =
+        (snesc.button(SnesController::P2, SnesController::Start) << 7) |
+        (snesc.button(SnesController::P2, SnesController::Up   ) << 5) |
+        (snesc.button(SnesController::P2, SnesController::Down ) << 4) |
+        (snesc.button(SnesController::P2, SnesController::Left ) << 3) |
+        (snesc.button(SnesController::P2, SnesController::Right) << 2) |
+        (snesc.button(SnesController::P2, SnesController::A    ) << 1) |
+        (snesc.button(SnesController::P2, SnesController::B    ) << 0);
+      // PUSH3 PUSH4 PUSH5 PUSH6 (PUSH7) (PUSH8) UND UND
+    ios[4] =
+        (snesc.button(SnesController::P2, SnesController::X    ) << 7) |
+        (snesc.button(SnesController::P2, SnesController::Y    ) << 6) |
+        (snesc.button(SnesController::P2, SnesController::L    ) << 5) |
+        (snesc.button(SnesController::P2, SnesController::R    ) << 4);
 
     // Update coin
-    uint8_t newCoin = digitalRead(A3);
+    uint8_t newCoin = snesc.button(SnesController::P1, SnesController::Select);
     if (coin && !newCoin)
       coinCount++;
     coin = newCoin;
@@ -155,9 +157,8 @@ void loop() {
    case JVSIO::kCmdIoId:
     io.pushReport(JVSIO::kReportOk);
     {
-      const char* id = virtualon_mode ? virtualon_id : suchipai_mode ? suchipai_id : io_id;
-      for (size_t i = 0; id[i]; ++i)
-        io.pushReport(id[i]);
+      for (size_t i = 0; io_id[i]; ++i)
+        io.pushReport(io_id[i]);
     }
     io.pushReport(0);
 
@@ -194,14 +195,8 @@ void loop() {
     io.pushReport(ios[0]);
     for (size_t player = 0; player < data[1]; ++player) {
       for (size_t line = 1; line <= data[2]; ++line) {
-        if (virtualon_mode)
-          io.pushReport(virtualonReport(player, line));
-        else if (player)
-          io.pushReport(0x00);
-        else if (suchipai_mode)
-          io.pushReport(suchipaiReport());
-        else
-          io.pushReport(line < sizeof(ios) ? ios[line] : 0x00);
+        size_t offset = player * 2 + line;
+        io.pushReport(offset < sizeof(ios) ? ios[offset] : 0x00);
       }
     }
     break;
