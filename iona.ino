@@ -220,7 +220,7 @@ void loop() {
     }
     break;
    case JVSIO::kCmdCoinSub:
-    if (data[1] == 1)
+    if (data[1] == 0)
       coinCount -= data[3];
     io.pushReport(JVSIO::kReportOk);
     break;
