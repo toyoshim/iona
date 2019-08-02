@@ -67,7 +67,7 @@ class SnesController {
   }
 
   int button(int player, int button) {
-    return (buttons[player][button] == LOW) ? 0 : 1;
+    return (buttons[player][button] == LOW) ? 1 : 0;
   }
 
  private:
