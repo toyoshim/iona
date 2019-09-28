@@ -1048,7 +1048,7 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <wire x1="2.54" y1="34.29" x2="1.905" y2="34.29" width="0.4572" layer="16"/>
 <wire x1="3.81" y1="8.5725" x2="3.81" y2="33.02" width="0.4572" layer="16"/>
 <wire x1="3.81" y1="33.02" x2="2.54" y2="34.29" width="0.4572" layer="16"/>
-<wire x1="3.81" y1="33.02" x2="1.905" y2="31.75" width="0" layer="19" extent="16-16"/>
+<via x="4.7625" y="12.7" extent="1-16" drill="0.35"/>
 </signal>
 <signal name="DWN">
 <contactref element="DRC" pad="12"/>
