@@ -1,58 +1,40 @@
-# IONA - JVS IO Board by Arduino Nano
+# IONA - JVS IO Board by Arduino Pro Micro
 
-This program makes an Arduino Nano work as a JVS IO Board that allows you
-to connect a legacy JAMMA joystick to a JVS based arcade system, such as NAOMI.
+This program makes an Arduino Nano work as a JVS IO Board that allows you to connect a legacy JAMMA joystick to a JVS based arcade system, such as NAOMI.
 
-Since now underlying [jvsio](https://github.com/toyoshim/jvsio) library
-supports several boards and devices, you would be able to run this on
-other boards with minimal hacks.
+Since now underlying [jvsio](https://github.com/toyoshim/jvsio) library supports several boards and devices, you would be able to run this on other boards with minimal hacks.
 
-Also there is [another example](https://github.com/toyoshim/iona-js)
-to run iona compatible functionalities without the Arduino firmware.
+Also there is [another example](https://github.com/toyoshim/iona-js) to run iona compatible functionalities without the Arduino firmware.
+
 
 ## Schematic
 ```
-                         o TX1  VIN o
-JVS Data+ o--------------o RX0  GND o
-                         o RST  RST o
-                         o GND   5V o--------------------------o (JAMMA c)
-                                                         / DIPSW1
-JVS Data- o--------------o D2    A7 o-o---o---VVVV-------o o---o 5V
-                                      |   |   R Ohm
-                                    ----- |              / DIPSW2
-                                    ///// +---VVVVVVVV---o o---o 5V
-                                               2R Ohm
-                                                         / DIPSW3
-JVS Sense o---o---VVVV---o D3    A6 o-o---o---VVVV-------o o---o 5V
-              |  100 Ohm              |   |   R Ohm
-       100 nF =                     ----- |              / DIPSW4
-              |                     ///// +---VVVVVVVV---o o---o 5V
-            -----                              2R Ohm
-            /////
- JAMMA 18 o--------------o D4    A5 o
- JAMMA 19 o--------------o D5    A4 o
- JAMMA 20 o--------------o D6    A3 o--------------------------o JAMMA 16
- JAMMA 21 o--------------o D7    A2 o--------------------------o JAMMA 17
- JAMMA 22 o--------------o D8    A1 o--------------------------o (button 5)
- JAMMA 23 o--------------o D9    A0 o--------------------------o (button 6)
- JAMMA 24 o--------------o D10 AREF o--------------------------o 5V
- JAMMA 25 o--------------o D11  3V3 o
- JAMMA 15 o--------------o D12  D13 o--------------------------o LED on Nano
-```
-Of course, all GNDs should be connected together.
-```
- JVC GND o---o---o JAMMA GND
-             |
-      Arduino Nano  GND
-```
-VIN from JAMMA 5V is optinoal. Instead, you can provide power to the Arduino
-Nano from the USB mini on the board as usually you do to program it.
+# IONA - JVS IO Board by Arduino Nano
 
-DIPSW1-4 are also optional, and not used yet. But probably will be used to have
-rapid fire switches, and mode select to support the Marjong connector.
+This program makes an Arduino Pro Micro work as a JVS IO Board that allows youto connect a legacy AES compatible joystick gamepad (included Button 5 and 6 for customomized arcade sticks.
 
-Button 5 and 6 can be connected to an extended connector that support extra
-buttons, like aka kick harness.
+Since now underlying [jvsio](https://github.com/toyoshim/jvsio) library supports several boards and devices, you would be able to run this on other boards with minimal hacks.
+
+Also there is [another example](https://github.com/toyoshim/iona-js) to run iona compatible functionalities without the Arduino firmware.
+
+Resistor (R1) and capacitor (C1) are 100Ohm and 100nF 0603 SMD.
+
+The PCB is based in this DB15 AES compatible pinout:
+```
+.----------------------------------------------------------------.
+\ 1:GND   2:B6    3:CDT   4:B4    5:B2    6:RGH   7:DWN   8:+5V  /
+ \                                                              /
+  \  9:NC   10:B5   11:STR    12:B3   13:B1   14:LFT    15:UP  /
+    `---------------------------------------------------------´
+```
+The Board  has a jumper, if it's shorted then it works as a USB Stick for a computer, using the micro USB of Arduino., else it works aas a JVS for the naomi using the USB B connector.
+
+In JVS mode, the Naomi's USB doesn't give power to the board, use the micro USB connector or the power jumpers on the board. You can get 5V from CN7 on the Naomi Board.
+```
+ _________________
+| 5V  5V  GND GND |
+ ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+```
 
 Note: JVS uses the USB connector, but it isn't the real USB at all.
 The protocol is completely different, and it does not provide the 5V power.
