@@ -4,6 +4,8 @@ The code works only with the JVS, USB Joystick mode is comming.
 
 # IONA - JVS IO Board by Arduino Pro Micro
 
+Original code by [Takashi Toyoshima](https://github.com/toyoshim).
+
 This program makes an Arduino Nano work as a JVS IO Board that allows you to connect a legacy JAMMA joystick to a JVS based arcade system, such as NAOMI.
 
 Since now underlying [jvsio](https://github.com/toyoshim/jvsio) library supports several boards and devices, you would be able to run this on other boards with minimal hacks.
