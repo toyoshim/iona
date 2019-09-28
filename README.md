@@ -34,7 +34,7 @@ The Board  has a jumper, if it's shorted then it works as a USB Stick for a comp
 In JVS mode, the Naomi's USB doesn't give power to the board, use the micro USB connector or the power jumpers on the board. You can get 5V from CN7 on the Naomi Board.
 ```
  _________________
-| 5V  5V  GND GND |
+| 5V  5V  GND GND |   CN7
  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 ```
 
