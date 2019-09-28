@@ -1,12 +1,13 @@
 // Copyright 2018 Takashi Toyoshima <toyoshim@gmail.com>. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+// Code modified by Francesc Bofill <kamencesc@gmail.com> to adapt a PCB design using the ProMicro code.
 
 #include "jvsio/clients/ProMicroClient.cpp"
 #include "jvsio/JVSIO.cpp"
 
 
-// Array for pins
+// Array of pins
 byte buttonsAr[] = { 6, 14, 6, 15, 3, 19, 18, 4,    7,  16,   8,   10};
 // button names      1   2  3   4  5   6   7  8   LFT   RGT   UP   DWN  
 
