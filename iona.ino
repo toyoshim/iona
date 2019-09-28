@@ -2,19 +2,39 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "jvsio/clients/NanoClient.cpp"
+#include "jvsio/clients/ProMicroClient.cpp"
 #include "jvsio/JVSIO.cpp"
 
-NanoDataClient data;
-NanoSenseClient sense;
-NanoLedClient led;
+
+// Array for pins
+byte buttonsAr[] = { 7, 14, 6, 15, 4, 21, 19, 5,    8,  16,   20,   10};
+// button names      1   2  3   4  5   6   7  8   LFT   RGT   UP   DWN  
+
+// Constants for easy associate buttons -> Array -> ports
+const int btn1 = 0;
+const int btn2 = 1;
+const int btn3 = 2;
+const int btn4 = 3;
+const int btn5 = 4;
+const int btn6 = 5;
+const int Start = 7;
+const int Select = 6;
+const int Up = 10;
+const int Down = 11;
+const int Left = 8;
+const int Right = 9;
+
+// Pro Micro
+ProMicroDataClient data;
+ProMicroSenseClient sense;
+ProMicroLedClient led;
 JVSIO io(&data, &sense, &led);
 
 // Some NAOMI games expects the first segment starts with "SEGA ENTERPRISES,LTD.".
 // E.g. one major official I/O board is "SEGA ENTERPRISES,LTD.;I/O 838-13683B;Ver1.07;99/16".
-static const char io_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;ver0.94;Normal Mode";
-static const char suchipai_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver0.94;Su Chi Pai Mode";
-static const char virtualon_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver0.94;Virtual-On Mode";
+static const char io_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-PROMICRO;ver0.94;Normal Mode";
+static const char suchipai_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-PROMICRO;Ver0.94;Su Chi Pai Mode";
+static const char virtualon_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-PROMICRO;Ver0.94;Virtual-On Mode";
 uint8_t ios[5] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
 uint8_t coinCount = 0;
 uint8_t mode = 0;
@@ -25,7 +45,9 @@ bool suchipai_mode = false;
 bool virtualon_mode = false;
 
 int in(int pin, int shift) {
-  return (digitalRead(pin) ? 0 : 1) << shift;
+  // Pin = Button = Pin
+  // Return 1 if low and then return the bit shift displaced
+  return (digitalRead(buttonsAr[pin]) ? 0 : 1) << shift;
 }
 
 void updateMode() {
@@ -125,9 +147,9 @@ uint8_t virtualonReport(size_t player, size_t line) {
 void setup() {
   io.begin();
 
-  int pins[] = { 4, 5, 6, 7, 8, 9, 10, 11, 12, A0, A1, A2, A3, A4, A5 };
-  for (int i = 0; i < sizeof(pins); ++i)
-    pinMode(pins[i], INPUT_PULLUP);
+  for (int j=0; j < (sizeof(buttonsAr)/sizeof(buttonsAr[0])); j++) {
+    pinMode(buttonsAr[j], INPUT_PULLUP);
+  }
 }
 
 void loop() {
@@ -138,14 +160,14 @@ void loop() {
 
     // Update IO pins.
     // Common SW: TEST TILT1 TILT2 TILT3 UND UND UND UND
-    ios[0] = in(12, 7);
+    ios[0] = in(Start, 7) && in(Select, 7);
     // START SERVICE UP DOWN LEFT RIGHT PUSH1 PISH2
-    ios[1] = in(A2, 7) | in(4, 5) | in(5, 4) | in(6, 3) | in(7, 2) | in(8, 1) | in(9, 0);
+    ios[1] = in(Start, 7) | in(Up, 5) | in(Down, 4) | in(Left, 3) | in(Right, 2) | in(btn1, 1) | in(btn2, 0);
       // PUSH3 PUSH4 PUSH5 PUSH6 (PUSH7) (PUSH8) UND UND
-    ios[2] = in(10, 7) | in(11, 6) | in(A1, 5) | in(A0, 4);
+    ios[2] = in(btn3, 7) | in(btn4, 6) | in(btn5, 5) | in(btn6, 4);
 
     // Update coin
-    uint8_t newCoin = digitalRead(A3);
+    uint8_t newCoin = digitalRead(buttonsAr[Select]);    // ¿?
     if (coin && !newCoin)
       coinCount++;
     coin = newCoin;
