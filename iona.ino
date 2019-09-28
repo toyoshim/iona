@@ -7,7 +7,7 @@
 
 
 // Array for pins
-byte buttonsAr[] = { 7, 14, 6, 15, 4, 21, 19, 5,    8,  16,   20,   10};
+byte buttonsAr[] = { 6, 14, 6, 15, 3, 19, 18, 4,    7,  16,   8,   10};
 // button names      1   2  3   4  5   6   7  8   LFT   RGT   UP   DWN  
 
 // Constants for easy associate buttons -> Array -> ports
