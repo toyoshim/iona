@@ -3,9 +3,12 @@
 // found in the LICENSE file.
 // Code modified by Francesc Bofill <kamencesc@gmail.com> to adapt a PCB design using the ProMicro code.
 
+// Naomi mode
 #include "jvsio/clients/ProMicroClient.cpp"
 #include "jvsio/JVSIO.cpp"
 
+// USB mode
+#include "Joystick.h"
 
 // Array of pins
 byte buttonsAr[] = { 6, 14, 6, 15, 3, 19, 18, 4,    7,  16,   8,   10};
@@ -24,6 +27,18 @@ const int Up = 10;
 const int Down = 11;
 const int Left = 8;
 const int Right = 9;
+
+// Umper/Switch port for USB/Naomi mode
+const int Jumper = 20;
+
+// Create Joystick 0
+Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID,JOYSTICK_TYPE_GAMEPAD,
+  8, 0,                  // Button Count, Hat Switch Count
+  true, true, false,     // X and Y, but no Z Axis
+  false, false, false,   // No Rx, Ry, or Rz
+  false, false,          // No rudder or throttle
+  false, false, false);  // No accelerator, brake, or steering
+
 
 // Pro Micro
 ProMicroDataClient data;
@@ -151,105 +166,130 @@ void setup() {
   for (int j=0; j < (sizeof(buttonsAr)/sizeof(buttonsAr[0])); j++) {
     pinMode(buttonsAr[j], INPUT_PULLUP);
   }
+
+  // Initialize Joystick 
+  Joystick.begin();
+
+  // X / Y axis sensibility
+  Joystick.setXAxisRange(-1, 1);
+  Joystick.setYAxisRange(-1, 1);
 }
 
 void loop() {
-  uint8_t len;
-  uint8_t* data = io.getNextCommand(&len);
-  if (!data) {
-    updateMode();
-
-    // Update IO pins.
-    // Common SW: TEST TILT1 TILT2 TILT3 UND UND UND UND
-    ios[0] = in(Start, 7) && in(Select, 7);
-    // START SERVICE UP DOWN LEFT RIGHT PUSH1 PISH2
-    ios[1] = in(Start, 7) | in(Up, 5) | in(Down, 4) | in(Left, 3) | in(Right, 2) | in(btn1, 1) | in(btn2, 0);
-      // PUSH3 PUSH4 PUSH5 PUSH6 (PUSH7) (PUSH8) UND UND
-    ios[2] = in(btn3, 7) | in(btn4, 6) | in(btn5, 5) | in(btn6, 4);
-
-    // Update coin
-    uint8_t newCoin = digitalRead(buttonsAr[Select]);    // ¿?
-    if (coin && !newCoin)
-      coinCount++;
-    coin = newCoin;
-    return;
-  }
-  switch (*data) {
-   case JVSIO::kCmdIoId:
-    io.pushReport(JVSIO::kReportOk);
-    {
-      const char* id = virtualon_mode ? virtualon_id : suchipai_mode ? suchipai_id : io_id;
-      for (size_t i = 0; id[i]; ++i)
-        io.pushReport(id[i]);
+  if (digitalRead(buttonsAr[Select])) {
+    // Naomi Mode
+    uint8_t len;
+    uint8_t* data = io.getNextCommand(&len);
+    if (!data) {
+      updateMode();
+  
+      // Update IO pins.
+      // Common SW: TEST TILT1 TILT2 TILT3 UND UND UND UND
+      ios[0] = in(Start, 7) && in(Select, 7);
+      // START SERVICE UP DOWN LEFT RIGHT PUSH1 PISH2
+      ios[1] = in(Start, 7) | in(Up, 5) | in(Down, 4) | in(Left, 3) | in(Right, 2) | in(btn1, 1) | in(btn2, 0);
+        // PUSH3 PUSH4 PUSH5 PUSH6 (PUSH7) (PUSH8) UND UND
+      ios[2] = in(btn3, 7) | in(btn4, 6) | in(btn5, 5) | in(btn6, 4);
+  
+      // Update coin
+      uint8_t newCoin = digitalRead(buttonsAr[Select]);    // ¿?
+      if (coin && !newCoin)
+        coinCount++;
+      coin = newCoin;
+      return;
     }
-    io.pushReport(0);
-
-    // Initialize.
-    coinCount = 0;
-    break;
-   case JVSIO::kCmdFunctionCheck:
-    io.pushReport(JVSIO::kReportOk);
-
-    io.pushReport(0x01);  // sw
-    io.pushReport(0x02);  // players
-    io.pushReport(0x0C);  // buttons
-    io.pushReport(0x00);
-
-    io.pushReport(0x03);  // analog inputs
-    io.pushReport(0x08);  // channels
-    io.pushReport(0x00);  // bits
-    io.pushReport(0x00);
-
-    io.pushReport(0x12);  // general purpose driver
-    io.pushReport(0x08);  // slots
-    io.pushReport(0x00);
-    io.pushReport(0x00);
-
-    io.pushReport(0x02);  // coin
-    io.pushReport(0x02);  // slots
-    io.pushReport(0x00);
-    io.pushReport(0x00);
-
-    io.pushReport(0x00);
-    break;
-   case JVSIO::kCmdSwInput:
-    io.pushReport(JVSIO::kReportOk);
-    io.pushReport(ios[0]);
-    for (size_t player = 0; player < data[1]; ++player) {
-      for (size_t line = 1; line <= data[2]; ++line) {
-        if (virtualon_mode)
-          io.pushReport(virtualonReport(player, line));
-        else if (player)
-          io.pushReport(0x00);
-        else if (suchipai_mode)
-          io.pushReport(suchipaiReport());
-        else
-          io.pushReport(line < sizeof(ios) ? ios[line] : 0x00);
+    switch (*data) {
+     case JVSIO::kCmdIoId:
+      io.pushReport(JVSIO::kReportOk);
+      {
+        const char* id = virtualon_mode ? virtualon_id : suchipai_mode ? suchipai_id : io_id;
+        for (size_t i = 0; id[i]; ++i)
+          io.pushReport(id[i]);
       }
-    }
-    break;
-   case JVSIO::kCmdCoinInput:
-    io.pushReport(JVSIO::kReportOk);
-    for (size_t slot = 0; slot < data[1]; ++slot) {
-      io.pushReport((0 << 6) | 0);
-      io.pushReport(slot ? 0x00 : coinCount);
-    }
-    break;
-   case JVSIO::kCmdAnalogInput:
-    io.pushReport(JVSIO::kReportOk);
-    for (size_t channel = 0; channel < data[1]; ++channel) {
-      io.pushReport(0x80);
+      io.pushReport(0);
+  
+      // Initialize.
+      coinCount = 0;
+      break;
+     case JVSIO::kCmdFunctionCheck:
+      io.pushReport(JVSIO::kReportOk);
+  
+      io.pushReport(0x01);  // sw
+      io.pushReport(0x02);  // players
+      io.pushReport(0x0C);  // buttons
       io.pushReport(0x00);
+  
+      io.pushReport(0x03);  // analog inputs
+      io.pushReport(0x08);  // channels
+      io.pushReport(0x00);  // bits
+      io.pushReport(0x00);
+  
+      io.pushReport(0x12);  // general purpose driver
+      io.pushReport(0x08);  // slots
+      io.pushReport(0x00);
+      io.pushReport(0x00);
+  
+      io.pushReport(0x02);  // coin
+      io.pushReport(0x02);  // slots
+      io.pushReport(0x00);
+      io.pushReport(0x00);
+  
+      io.pushReport(0x00);
+      break;
+     case JVSIO::kCmdSwInput:
+      io.pushReport(JVSIO::kReportOk);
+      io.pushReport(ios[0]);
+      for (size_t player = 0; player < data[1]; ++player) {
+        for (size_t line = 1; line <= data[2]; ++line) {
+          if (virtualon_mode)
+            io.pushReport(virtualonReport(player, line));
+          else if (player)
+            io.pushReport(0x00);
+          else if (suchipai_mode)
+            io.pushReport(suchipaiReport());
+          else
+            io.pushReport(line < sizeof(ios) ? ios[line] : 0x00);
+        }
+      }
+      break;
+     case JVSIO::kCmdCoinInput:
+      io.pushReport(JVSIO::kReportOk);
+      for (size_t slot = 0; slot < data[1]; ++slot) {
+        io.pushReport((0 << 6) | 0);
+        io.pushReport(slot ? 0x00 : coinCount);
+      }
+      break;
+     case JVSIO::kCmdAnalogInput:
+      io.pushReport(JVSIO::kReportOk);
+      for (size_t channel = 0; channel < data[1]; ++channel) {
+        io.pushReport(0x80);
+        io.pushReport(0x00);
+      }
+      break;
+     case JVSIO::kCmdCoinSub:
+      if (data[1] == 0)
+        coinCount -= data[3];
+      io.pushReport(JVSIO::kReportOk);
+      break;
+     case JVSIO::kCmdDriverOutput:
+      gpout = data[2];
+      io.pushReport(JVSIO::kReportOk);
+      break;
     }
-    break;
-   case JVSIO::kCmdCoinSub:
-    if (data[1] == 0)
-      coinCount -= data[3];
-    io.pushReport(JVSIO::kReportOk);
-    break;
-   case JVSIO::kCmdDriverOutput:
-    gpout = data[2];
-    io.pushReport(JVSIO::kReportOk);
-    break;
+  } else {
+    // USB Joystick mode
+    // Stick
+    byte lft = digitalRead(8);
+    byte rght = digitalRead(16);
+    byte u = digitalRead(9);
+    byte dwn = digitalRead(10);
+  
+    Joystick.setXAxis( (!rght * 1) + (!lft * -1) );
+    Joystick.setYAxis( (!u * 1 ) + (!dwn * -1 ));
+  
+    //6 + 2 botones
+    for (int i=0; i < (sizeof(buttonsAr)/sizeof(buttonsAr[0])) - 4; i++) {
+      Joystick.setButton(i, !digitalRead(buttonsAr[i]));
+    }
   }
 }
