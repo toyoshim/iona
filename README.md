@@ -10,7 +10,7 @@ Also there is [another example](https://github.com/toyoshim/iona-js) to run iona
 
 
 ## Schematic
-```
+
 # IONA - JVS IO Board by Arduino Nano
 
 This program makes an Arduino Pro Micro work as a JVS IO Board that allows youto connect a legacy AES compatible joystick gamepad (included Button 5 and 6 for customomized arcade sticks.
