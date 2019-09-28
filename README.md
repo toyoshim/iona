@@ -39,7 +39,7 @@ In JVS mode, the Naomi's USB doesn't give power to the board, use the micro USB 
 ```
 ## Board (PCB)
 
-![PCB](./PCB/Board_V1.png)
+![PCB](./PCB/Board_v1.png)
 
 Note: JVS uses the USB connector, but it isn't the real USB at all.
 The protocol is completely different, and it does not provide the 5V power.
