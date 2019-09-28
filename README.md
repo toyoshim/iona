@@ -1,6 +1,8 @@
-# - Under construction be patient -
+# - Unteted -
 
-The code works only with the JVS, USB Joystick mode is comming.
+The code is untested but teoricaly functional.
+
+Freel free to contact for questions about code and board.
 
 # IONA - JVS IO Board by Arduino Pro Micro
 
