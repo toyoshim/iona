@@ -76,7 +76,8 @@ void updateMode() {
     mode = 2;
   else
     mode = 3;
-
+  
+  mode = 0; //force mode 0, there are no switches.
   suchipai_mode = mode == 2;
   virtualon_mode = mode == 1;
 }
