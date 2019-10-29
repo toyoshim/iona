@@ -12,9 +12,9 @@ JVSIO io(&data, &sense, &led);
 
 // Some NAOMI games expects the first segment starts with "SEGA ENTERPRISES,LTD.".
 // E.g. one major official I/O board is "SEGA ENTERPRISES,LTD.;I/O 838-13683B;Ver1.07;99/16".
-static const char io_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;ver0.94;Normal Mode";
-static const char suchipai_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver0.94;Su Chi Pai Mode";
-static const char virtualon_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver0.94;Virtual-On Mode";
+static const char io_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;ver1.00;Normal Mode";
+static const char suchipai_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver1.00;Su Chi Pai Mode";
+static const char virtualon_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver1.00;Virtual-On Mode";
 uint8_t ios[5] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
 uint8_t coinCount = 0;
 uint8_t mode = 0;
@@ -152,6 +152,9 @@ void loop() {
     return;
   }
   switch (*data) {
+   case JVSIO::kCmdReset:
+    coinCount = 0;
+    break;
    case JVSIO::kCmdIoId:
     io.pushReport(JVSIO::kReportOk);
     {
@@ -160,9 +163,6 @@ void loop() {
         io.pushReport(id[i]);
     }
     io.pushReport(0);
-
-    // Initialize.
-    coinCount = 0;
     break;
    case JVSIO::kCmdFunctionCheck:
     io.pushReport(JVSIO::kReportOk);
@@ -220,8 +220,7 @@ void loop() {
     }
     break;
    case JVSIO::kCmdCoinSub:
-    if (data[1] == 0)
-      coinCount -= data[3];
+    coinCount -= data[3];
     io.pushReport(JVSIO::kReportOk);
     break;
    case JVSIO::kCmdDriverOutput:
