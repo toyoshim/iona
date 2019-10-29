@@ -154,6 +154,9 @@ void loop() {
     return;
   }
   switch (*data) {
+   case JVSIO::kCmdReset:
+    coinCount = 0;
+    break;
    case JVSIO::kCmdIoId:
     io.pushReport(JVSIO::kReportOk);
     {
@@ -161,9 +164,6 @@ void loop() {
         io.pushReport(io_id[i]);
     }
     io.pushReport(0);
-
-    // Initialize.
-    coinCount = 0;
     break;
    case JVSIO::kCmdFunctionCheck:
     io.pushReport(JVSIO::kReportOk);
@@ -215,8 +215,7 @@ void loop() {
     }
     break;
    case JVSIO::kCmdCoinSub:
-    if (data[1] == 0)
-      coinCount -= data[3];
+    coinCount -= data[3];
     io.pushReport(JVSIO::kReportOk);
     break;
    case JVSIO::kCmdDriverOutput:
