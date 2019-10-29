@@ -60,3 +60,23 @@ buttons, like aka kick harness.
 
 Note: JVS uses the USB connector, but it isn't the real USB at all.
 The protocol is completely different, and it does not provide the 5V power.
+
+To support multiple nodes, you can use NanoSenseClientSupportingDaisyChain
+instead of NanoSenseClient, and use the A5 pin to connect with the secondary
+sense signal.
+```
+JVS Data+ o----o--------------------------------------o    Data+/- are shared
+               |                                      |       among all nodes
+JVS Data- o-------o--------------------------------------o
+               |  |                                   |  |
+JVS Sense o----------o     o--------------------------------o  Terminated by
+               |  |  |     | Sense must be isolated   |  |  |   NanoSenseClient
+               |  |  |     |  per node:node link      |  |  |
+               R  R  |     |                          R  R  |
+               |  |  |     |                          |  |  |
+               o  o  o     o                          o  o  o
+              RX0 D2 D3    A5                        RX0 D2 D3
+         Nano for the primary node              Nano for the secondary node
+with NanoSenseClientSupportingDaisyChain            with NanoSenseClient
+```
+You may want to insert small Rs for each RX0 and D2 to protect circuits.
