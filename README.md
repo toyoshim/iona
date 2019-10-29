@@ -17,18 +17,22 @@ JVS Data+ o--------------o RX0  GND o
                          o RST  RST o
                          o GND   5V o--------------------------o (JAMMA c)
                                                          / DIPSW1
-JVS Data- o--------------o D2    A7 o-o---o---VVVV-------o o---o 5V
+JVS Data- o--------------o D2    A7 o-o---o---|==|-------o o---o 5V
                                       |   |   R Ohm
-                                    ----- |              / DIPSW2
-                                    ///// +---VVVVVVVV---o o---o 5V
-                                               2R Ohm
-                                                         / DIPSW3
-JVS Sense o---o---VVVV---o D3    A6 o-o---o---VVVV-------o o---o 5V
+                                      _   |              / DIPSW2
+                                R Ohm| |  +---|======|---o o---o 5V
+                                     |_|       2R Ohm
+                                      |
+                                    -----
+                                    /////                / DIPSW3
+JVS Sense o---o---VVVV---o D3    A6 o-o---o---|==|-------o o---o 5V
               |  100 Ohm              |   |   R Ohm
-       100 nF =                     ----- |              / DIPSW4
-              |                     ///// +---VVVVVVVV---o o---o 5V
-            -----                              2R Ohm
-            /////
+       100 nF =                       -   |              / DIPSW4
+              |                 R Ohm| |  +---|======|---o o---o 5V
+            -----                    |_|       2R Ohm
+            /////                     |
+                                    -----
+                                    /////
  JAMMA 18 o--------------o D4    A5 o
  JAMMA 19 o--------------o D5    A4 o
  JAMMA 20 o--------------o D6    A3 o--------------------------o JAMMA 16
