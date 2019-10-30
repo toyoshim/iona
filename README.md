@@ -79,5 +79,6 @@ JVS Sense o----------o     o--------------------------------o  Terminated by
          Nano for the primary node              Nano for the secondary node
 with NanoSenseClientSupportingDaisyChain            with NanoSenseClient
 ```
-RC Low Pass Filter is still needed to generate the intermediate voltage between D3 and Sense as we do for the single node circuit.
+RC Low Pass Filter is still needed to generate the intermediate voltage between
+D3 and Sense as we do for the single node circuit.
 You may want to insert small Rs for each RX0 and D2 to protect circuits.
