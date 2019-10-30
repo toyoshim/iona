@@ -96,8 +96,9 @@ SnesController snesc(A0, A1, A2, A3, A4, A5);
 
 static const char io_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;ver1.01;Experimental SNES Support";
 uint8_t ios[5] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
-uint8_t coinCount = 0;
-uint8_t coin = 0;
+uint8_t coinCount[2] = { 0, 0 };
+uint8_t coin[2] = { 0, 0 };
+uint8_t coinIndexBias = 0;
 uint8_t gpout = 0;
 
 void setup() {
@@ -148,14 +149,19 @@ void loop() {
 
     // Update coin
     uint8_t newCoin = snesc.button(SnesController::P1, SnesController::Select);
-    if (coin && !newCoin)
-      coinCount++;
-    coin = newCoin;
+    if (coin[0] && !newCoin)
+      coinCount[0]++;
+    coin[0] = newCoin;
+    newCoin = snesc.button(SnesController::P2, SnesController::Select);
+    if (coin[1] && !newCoin)
+      coinCount[1]++;
+    coin[1] = newCoin;
     return;
   }
   switch (*data) {
    case JVSIO::kCmdReset:
-    coinCount = 0;
+    coinCount[0] = coinCount[1] = 0;
+    coinIndexBias = 0;
     break;
    case JVSIO::kCmdIoId:
     io.pushReport(JVSIO::kReportOk);
@@ -215,7 +221,11 @@ void loop() {
     }
     break;
    case JVSIO::kCmdCoinSub:
-    coinCount -= data[3];
+    if (data[1] == 0)
+      coinIndexBias = 1;
+    data[1] += coinIndexBias;
+    if (data[1] < 3)
+      coinCount[data[1] - 1] -= data[3];
     io.pushReport(JVSIO::kReportOk);
     break;
    case JVSIO::kCmdDriverOutput:
