@@ -94,7 +94,7 @@ JVSIO io(&data, &sense, &led);
 // A5: SNES P2 Serial
 SnesController snesc(A0, A1, A2, A3, A4, A5);
 
-static const char io_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;ver0.94;Experimental SNES Support";
+static const char io_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;ver1.01;Experimental SNES Support";
 uint8_t ios[5] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
 uint8_t coinCount = 0;
 uint8_t coin = 0;
@@ -173,6 +173,11 @@ void loop() {
     io.pushReport(0x0C);  // buttons
     io.pushReport(0x00);
 
+    io.pushReport(0x02);  // coin
+    io.pushReport(0x02);  // slots
+    io.pushReport(0x00);
+    io.pushReport(0x00);
+
     io.pushReport(0x03);  // analog inputs
     io.pushReport(0x08);  // channels
     io.pushReport(0x00);  // bits
@@ -180,11 +185,6 @@ void loop() {
 
     io.pushReport(0x12);  // general purpose driver
     io.pushReport(0x08);  // slots
-    io.pushReport(0x00);
-    io.pushReport(0x00);
-
-    io.pushReport(0x02);  // coin
-    io.pushReport(0x02);  // slots
     io.pushReport(0x00);
     io.pushReport(0x00);
 
