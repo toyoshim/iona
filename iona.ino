@@ -12,9 +12,9 @@ JVSIO io(&data, &sense, &led);
 
 // Some NAOMI games expects the first segment starts with "SEGA ENTERPRISES,LTD.".
 // E.g. one major official I/O board is "SEGA ENTERPRISES,LTD.;I/O 838-13683B;Ver1.07;99/16".
-static const char io_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;ver1.00;Normal Mode";
-static const char suchipai_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver1.00;Su Chi Pai Mode";
-static const char virtualon_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver1.00;Virtual-On Mode";
+static const char io_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;ver1.01;Normal Mode";
+static const char suchipai_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver1.01;Su Chi Pai Mode";
+static const char virtualon_id[] = "SEGA ENTERPRISES,LTD.compat;IONA-NANO;Ver1.01;Virtual-On Mode";
 uint8_t ios[5] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
 uint8_t coinCount = 0;
 uint8_t mode = 0;
@@ -172,6 +172,11 @@ void loop() {
     io.pushReport(0x0C);  // buttons
     io.pushReport(0x00);
 
+    io.pushReport(0x02);  // coin
+    io.pushReport(0x02);  // slots
+    io.pushReport(0x00);
+    io.pushReport(0x00);
+
     io.pushReport(0x03);  // analog inputs
     io.pushReport(0x08);  // channels
     io.pushReport(0x00);  // bits
@@ -179,11 +184,6 @@ void loop() {
 
     io.pushReport(0x12);  // general purpose driver
     io.pushReport(0x08);  // slots
-    io.pushReport(0x00);
-    io.pushReport(0x00);
-
-    io.pushReport(0x02);  // coin
-    io.pushReport(0x02);  // slots
     io.pushReport(0x00);
     io.pushReport(0x00);
 
