@@ -28,7 +28,7 @@ JVS Data- o--------------o D2    A7 o-o---o---|==|-------o o---o 5V
 JVS Sense o---o---VVVV---o D3    A6 o-o---o---|==|-------o o---o 5V
               |  100 Ohm              |   |   R Ohm
        100 nF =                       -   |              / DIPSW4
-              |                 R Ohm| |  +---|======|---o o---o 5V
+              |  RC-LPF         R Ohm| |  +---|======|---o o---o 5V
             -----                    |_|       2R Ohm
             /////                     |
                                     -----
@@ -72,11 +72,12 @@ JVS Data- o-------o--------------------------------------o
 JVS Sense o----------o     o--------------------------------o  Terminated by
                |  |  |     | Sense must be isolated   |  |  |   NanoSenseClient
                |  |  |     |  per node:node link      |  |  |
-               R  R  |     |                          R  R  |
+               R  R LPF    |                          R  R LPF
                |  |  |     |                          |  |  |
                o  o  o     o                          o  o  o
               RX0 D2 D3    A5                        RX0 D2 D3
          Nano for the primary node              Nano for the secondary node
 with NanoSenseClientSupportingDaisyChain            with NanoSenseClient
 ```
+RC Low Pass Filter is still needed to generate the intermediate voltage between D3 and Sense as we do for the single node circuit.
 You may want to insert small Rs for each RX0 and D2 to protect circuits.
