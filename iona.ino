@@ -210,7 +210,7 @@ void loop() {
     io.pushReport(JVSIO::kReportOk);
     for (size_t slot = 0; slot < data[1]; ++slot) {
       io.pushReport((0 << 6) | 0);
-      io.pushReport(slot ? 0x00 : coinCount);
+      io.pushReport(slot >= 2 ? 0x00 : coinCount[slot]);
     }
     break;
    case JVSIO::kCmdAnalogInput:
