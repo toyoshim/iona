@@ -223,6 +223,10 @@ void loop() {
     coinCount -= data[3];
     io.pushReport(JVSIO::kReportOk);
     break;
+   case JVSIO::kCmdCoinAdd:
+    coinCount += data[3];
+    io.pushReport(JVSIO::kReportOk);
+    break;
    case JVSIO::kCmdDriverOutput:
     gpout = data[2];
     io.pushReport(JVSIO::kReportOk);
