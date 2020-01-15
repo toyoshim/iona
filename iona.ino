@@ -228,6 +228,14 @@ void loop() {
       coinCount[data[1] - 1] -= data[3];
     io.pushReport(JVSIO::kReportOk);
     break;
+   case JVSIO::kCmdCoinAdd:
+    if (data[1] == 0)
+      coinIndexBias = 1;
+    data[1] += coinIndexBias;
+    if (data[1] < 3)
+      coinCount[data[1] - 1] += data[3];
+    io.pushReport(JVSIO::kReportOk);
+    break;
    case JVSIO::kCmdDriverOutput:
     gpout = data[2];
     io.pushReport(JVSIO::kReportOk);
