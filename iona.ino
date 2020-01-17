@@ -2,12 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "jvsio/clients/NanoClient.cpp"
+#include "jvsio/clients/NanoClient.h"
+//#include "jvsio/clients/MegaClient.h"
 #include "jvsio/JVSIO.cpp"
 
 NanoDataClient data;
 NanoSenseClient sense;
 NanoLedClient led;
+//MegaDataClient data;
+//MegaSenseClient sense;
+//MegaLedClient led;
 JVSIO io(&data, &sense, &led);
 
 // MegaClient may allow you to define SUPPORT_2P to support 2 players.
