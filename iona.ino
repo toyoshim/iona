@@ -212,14 +212,14 @@ void loop() {
     io.pushReport(ios[0]);
     for (size_t player = 0; player < data[1]; ++player) {
       for (size_t line = 1; line <= data[2]; ++line) {
-        if (virtualon_mode)
+        if (virtualon_mode) {
           io.pushReport(virtualonReport(player, line));
-        else if (player)
-          io.pushReport(0x00);
-        else if (suchipai_mode)
+        } else if (suchipai_mode) {
           io.pushReport(suchipaiReport());
-        else
-          io.pushReport(line < sizeof(ios) ? ios[line] : 0x00);
+        } else {
+          int index = player * 2 + line;
+          io.pushReport(index < sizeof(index) ? ios[index] : 0x00);
+        }
       }
     }
     break;
