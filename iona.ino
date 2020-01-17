@@ -153,9 +153,9 @@ void loop() {
     ios[2] = in(10, 7) | in(11, 6) | in(A1, 5) | in(A0, 4);
  #if defined(SUPPORT_2P)
     // START(13) SERVICE(-) UP(14) DOWN(15) LEFT(16) RIGHT(17) PUSH1(18) PUSH2(19)
-    ios[1] = in(13, 7) | in(14, 5) | in(15, 4) | in(16, 3) | in(17, 2) | in(18, 1) | in(19, 0);
+    ios[3] = in(13, 7) | in(14, 5) | in(15, 4) | in(16, 3) | in(17, 2) | in(18, 1) | in(19, 0);
     // PUSH3(20) PUSH4(21) PUSH5(22) PUSH6(23) PUSH7(-) PUSH8(-) UND UND
-    ios[2] = in(20, 7) | in(21, 6) | in(22, 5) | in(23, 4);
+    ios[4] = in(20, 7) | in(21, 6) | in(22, 5) | in(23, 4);
  #endif // defined(SUPPORT_2P)
 
     // Update coin
