@@ -1,4 +1,4 @@
-# - Unteted -
+# - Untested -
 
 The code is untested but teoricaly functional.
 
