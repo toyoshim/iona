@@ -145,6 +145,9 @@ void setup() {
 void loop() {
   uint8_t len;
   uint8_t* data = io.getNextCommand(&len);
+  uint16_t analog[8] = {
+    0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000
+  };
   if (!data) {
     updateMode();
 
@@ -161,6 +164,12 @@ void loop() {
     // PUSH3(20) PUSH4(21) PUSH5(22) PUSH6(23) PUSH7(-) PUSH8(-) UND UND
     ios[4] = in(20, 7) | in(21, 6) | in(22, 5) | in(23, 4);
  #endif // defined(SUPPORT_2P)
+
+    // You need to adjust following analog ports, A0-A2, and should initialize them in setup().
+    analog[0] = analogRead(A0) << 6;
+    analog[1] = analogRead(A1) << 6;
+    analog[2] = analogRead(A2) << 6;
+    // and you can continue from 0 to 7.
 
     // Update coin
     uint8_t newCoin = digitalRead(A3);
@@ -233,8 +242,8 @@ void loop() {
    case JVSIO::kCmdAnalogInput:
     io.pushReport(JVSIO::kReportOk);
     for (size_t channel = 0; channel < data[1]; ++channel) {
-      io.pushReport(0x80);
-      io.pushReport(0x00);
+      io.pushReport(analog[channel] >> 8);
+      io.pushReport(analog[channel] & 0xff);
     }
     break;
    case JVSIO::kCmdCoinSub:
