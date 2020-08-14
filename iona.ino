@@ -218,7 +218,7 @@ void loop() {
           io.pushReport(suchipaiReport());
         } else {
           int index = player * 2 + line;
-          io.pushReport(index < sizeof(index) ? ios[index] : 0x00);
+          io.pushReport(index < sizeof(ios) ? ios[index] : 0x00);
         }
       }
     }
