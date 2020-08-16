@@ -138,8 +138,8 @@ void setup() {
     13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
 #endif  // defined(SUPPORT_2P)
   };
-  for (int i = 0; i < (sizeof(pins) / sizeof(int)); ++i)
-    pinMode(pins[i], INPUT_PULLUP);
+  for (int& pin: pins)
+    pinMode(pin, INPUT_PULLUP);
 }
 
 void loop() {
