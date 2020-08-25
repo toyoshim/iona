@@ -1,6 +1,6 @@
-# - Untested -
+# Tested
 
-The code is untested but teoricaly functional.
+The code was tested on a prototype board by Stefano Minozzi (@cyllboy).
 
 Freel free to contact for questions about code and board.
 
