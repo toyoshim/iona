@@ -2,17 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 // Code modified by Francesc Bofill <kamencesc@gmail.com> to adapt a PCB design using the ProMicro code.
+// Code tested and debugged by Stefano Minozzi <stefano.minozzi@gmail.com> on a prototype of the PCB design by Francesc Bofill.
 
 // Naomi mode
 #include "jvsio/clients/ProMicroClient.cpp"
 #include "jvsio/JVSIO.cpp"
 
 // USB mode
-#include "Joystick.h"
+#include <Joystick.h> // import in the IDE the "joystick library" by Matthew Heironimus https://github.com/MHeironimus/ArduinoJoystickLibrary
 
 // Array of pins
-byte buttonsAr[] = { 6, 14, 6, 15, 3, 19, 18, 4,    7,  16,   8,   10};
-// button names      1   2  3   4  5   6   7  8   LFT   RGT   UP   DWN  
+byte buttonsAr[] = { 6, 14, 5, 15, 3, 19, 18, 4, 7, 16, 8, 10, 20};
+// button names      1   2  3   4  5   6   7  8   LFT   RGT   UP   DWN  JUMPER
 
 // Constants for easy associate buttons -> Array -> ports
 const int btn1 = 0;
@@ -21,15 +22,15 @@ const int btn3 = 2;
 const int btn4 = 3;
 const int btn5 = 4;
 const int btn6 = 5;
-const int Start = 7;
-const int Select = 6;
+const int Start = 6;
+const int Select = 7;
 const int Up = 10;
 const int Down = 11;
 const int Left = 8;
 const int Right = 9;
 
-// Umper/Switch port for USB/Naomi mode
-const int Jumper = 20;
+// Jumper/Switch port for USB/Naomi mode
+const int Jumper = 12;
 
 // Create Joystick 0
 Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID,JOYSTICK_TYPE_GAMEPAD,
@@ -177,7 +178,7 @@ void setup() {
 }
 
 void loop() {
-  if (digitalRead(buttonsAr[Select])) {
+  if (digitalRead(buttonsAr[Jumper])) {
     // Naomi Mode
     uint8_t len;
     uint8_t* data = io.getNextCommand(&len);
@@ -280,13 +281,13 @@ void loop() {
   } else {
     // USB Joystick mode
     // Stick
-    byte lft = digitalRead(8);
+    byte lft = digitalRead(7);
     byte rght = digitalRead(16);
-    byte u = digitalRead(9);
+    byte u = digitalRead(8);
     byte dwn = digitalRead(10);
   
     Joystick.setXAxis( (!rght * 1) + (!lft * -1) );
-    Joystick.setYAxis( (!u * 1 ) + (!dwn * -1 ));
+    Joystick.setYAxis( (!dwn * 1 ) + (!u * -1 ) );
   
     //6 + 2 botones
     for (int i=0; i < (sizeof(buttonsAr)/sizeof(buttonsAr[0])) - 4; i++) {
