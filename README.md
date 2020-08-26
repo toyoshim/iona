@@ -46,7 +46,7 @@ In JVS mode, the Naomi's USB doesn't give power to the board, use the micro USB 
 
 ## !! Use an Arduino Pro Micro with micro USB connector, the mini USB version is a little wider) !! ##
 
-![ARDUINO](./img/arduino_pro_micro.png)
+![ARDUINO](./arduino_pro_micro.png)
 
 Note: JVS uses the USB connector, but it isn't the real USB at all.
 The protocol is completely different, and it does not provide the 5V power.
