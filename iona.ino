@@ -2,20 +2,44 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "jvsio/clients/NanoClient.h"
-//#include "jvsio/clients/MegaClient.h"
+// Define one of following USE_*.
+//#define USE_NANO
+#define USE_MEGA
+
+#if defined(USE_NANO)
+# include "jvsio/clients/NanoClient.h"
+#elif defined(USE_MEGA)
+# include "jvsio/clients/MegaClient.h"
+#else
+# error "please define one uf USE_*"
+#endif
 #include "jvsio/JVSIO.cpp"
 
+#if defined(USE_NANO)
 NanoDataClient data;
 NanoSenseClient sense;
 NanoLedClient led;
-//MegaDataClient data;
-//MegaSenseClient sense;
-//MegaLedClient led;
+
+const int pins[] = {
+  12, A3,
+  A2,  4,  5,  6,  7,  8,  9, 10, 11, A1, A0,
+};
+#endif  // defined(USE_NANO)
+
+#if defined(USE_MEGA)
+MegaDataClient data;
+MegaSenseClient sense;
+MegaLedClient led;
+# define SUPPORT_2P // MegaClient may allow you to define SUPPORT_2P to support 2 players.
+const int pins[] = {
+  12, A3,
+  A2,  4,  5,  6,  7,  8, 14, 10, 11, A1, A0,  // Use 14 instead of 9 as 9 is used for SENSE.
+  13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,  // Use 13..23 for 2P buttons.
+};
+#endif  // defined(USE_MEGA)
+
 JVSIO io(&data, &sense, &led);
 
-// MegaClient may allow you to define SUPPORT_2P to support 2 players.
-//#define SUPPORT_2P
 
 // Some NAOMI games expects the first segment starts with "SEGA ENTERPRISES,LTD.".
 // E.g. one major official I/O board is "SEGA ENTERPRISES,LTD.;I/O 838-13683B;Ver1.07;99/16".
@@ -32,7 +56,7 @@ bool suchipai_mode = false;
 bool virtualon_mode = false;
 
 int in(int pin, int shift) {
-  return (digitalRead(pin) ? 0 : 1) << shift;
+  return (digitalRead(pins[pin]) ? 0 : 1) << shift;
 }
 
 void updateMode() {
@@ -131,14 +155,7 @@ uint8_t virtualonReport(size_t player, size_t line) {
 
 void setup() {
   io.begin();
-
-  int pins[] = {
-     4,  5,  6,  7,  8,  9, 10, 11, 12, A0, A1, A2, A3, A4, A5,
-#if defined(SUPPORT_2P)
-    13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
-#endif  // defined(SUPPORT_2P)
-  };
-  for (int& pin: pins)
+  for (int pin: pins)
     pinMode(pin, INPUT_PULLUP);
 }
 
@@ -150,20 +167,20 @@ void loop() {
 
     // Update IO pins.
     // Common SW: TEST TILT1 TILT2 TILT3 UND UND UND UND
-    ios[0] = in(12, 7);
-    // START(A2) SERVICE(-) UP(4) DOWN(5) LEFT(6) RIGHT(7) PUSH1(8) PUSH2(9)
-    ios[1] = in(A2, 7) | in( 4, 5) | in( 5, 4) | in( 6, 3) | in( 7, 2) | in( 8, 1) | in( 9, 0);
-    // PUSH3(10) PUSH4(11) PUSH5(A1) PUSH6(A0) PUSH7(-) PUSH8(-) UND UND
-    ios[2] = in(10, 7) | in(11, 6) | in(A1, 5) | in(A0, 4);
+    ios[0] = in( 0, 7);
+    //       START       SERVICE     UP          DOWN        LEFT        RIGHT       PUSH1       PUSH2
+    ios[1] = in( 2, 7)             | in( 3, 5) | in( 4, 4) | in( 5, 3) | in( 6, 2) | in( 7, 1) | in( 8, 0);
+    //       PUSH3       PUSH4       PUSH5       PUSH6       PUSH7       PUSH8       UND         UND
+    ios[2] = in( 9, 7) | in(10, 6) | in(11, 5) | in(12, 4);
  #if defined(SUPPORT_2P)
-    // START(13) SERVICE(-) UP(14) DOWN(15) LEFT(16) RIGHT(17) PUSH1(18) PUSH2(19)
+    //       START       SERVICE     UP          DOWN        LEFT        RIGHT       PUSH1       PUSH2
     ios[3] = in(13, 7) | in(14, 5) | in(15, 4) | in(16, 3) | in(17, 2) | in(18, 1) | in(19, 0);
-    // PUSH3(20) PUSH4(21) PUSH5(22) PUSH6(23) PUSH7(-) PUSH8(-) UND UND
+    //       PUSH3       PUSH4       PUSH5       PUSH6       PUSH7       PUSH8       UND         UND
     ios[4] = in(20, 7) | in(21, 6) | in(22, 5) | in(23, 4);
  #endif // defined(SUPPORT_2P)
 
     // Update coin
-    uint8_t newCoin = digitalRead(A3);
+    uint8_t newCoin = digitalRead(pins[1]);
     if (coin && !newCoin)
       coinCount++;
     coin = newCoin;
