@@ -174,7 +174,7 @@ void loop() {
     ios[2] = in( 9, 7) | in(10, 6) | in(11, 5) | in(12, 4);
  #if defined(SUPPORT_2P)
     //       START       SERVICE     UP          DOWN        LEFT        RIGHT       PUSH1       PUSH2
-    ios[3] = in(13, 7) | in(14, 5) | in(15, 4) | in(16, 3) | in(17, 2) | in(18, 1) | in(19, 0);
+    ios[3] = in(13, 7)             | in(14, 5) | in(15, 4) | in(16, 3) | in(17, 2) | in(18, 1) | in(19, 0);
     //       PUSH3       PUSH4       PUSH5       PUSH6       PUSH7       PUSH8       UND         UND
     ios[4] = in(20, 7) | in(21, 6) | in(22, 5) | in(23, 4);
  #endif // defined(SUPPORT_2P)
