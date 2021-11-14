@@ -34,7 +34,7 @@ MegaLedClient led;
 const int pins[] = {
   12, A3,
   A2,  4,  5,  6,  7,  8, 14, 10, 11, A1, A0,  // Use 14 instead of 9 as 9 is used for SENSE.
-  13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,  // Use 13..23 for 2P buttons.
+  13, 14, 15, 16, 17, 18, 19, 20, 21,  2,  3,  // Use 13..21 and 2..3 for 2P buttons.
 };
 #endif  // defined(USE_MEGA)
 
